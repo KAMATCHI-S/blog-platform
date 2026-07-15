@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in · Inkwell</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar" id="navSlot"></div>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h1>Welcome back</h1>
+      <p class="sub">Log in to write and comment.</p>
+      <div class="error-msg" id="errorMsg"></div>
+      <form id="loginForm">
+        <div class="field"><label for="username">Username</label><input id="username" autocomplete="username" required></div>
+        <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required></div>
+        <button type="submit" class="btn-primary">Log in</button>
+      </form>
+      <div class="auth-switch">No account yet? <a href="register.html">Create one</a></div>
+    </div>
+  </div>
+  <script src="js/api.js"></script>
+  <script>
+    Blog.renderNav('');
+    if (Blog.getToken()) location.href = 'index.html';
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.classList.remove('show');
+      try {
+        const data = await Blog.api('/api/auth/login', 'POST', {
+          username: document.getElementById('username').value.trim(),
+          password: document.getElementById('password').value,
+        });
+        Blog.setSession(data.token, data.user);
+        location.href = 'index.html';
+      } catch (err) {
+        errorMsg.textContent = err.message;
+        errorMsg.classList.add('show');
+      }
+    });
+  </script>
+</body>
+</html>

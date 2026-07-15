@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Write · Inkwell</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar" id="navSlot"></div>
+  <div class="main">
+    <h1>Write a new post</h1>
+    <p class="sub">Share something with the community.</p>
+    <div class="error-msg" id="errorMsg"></div>
+    <form id="postForm">
+      <div class="editor-field">
+        <label for="title">Title</label>
+        <input id="title" placeholder="Give it a title" required maxlength="200">
+      </div>
+      <div class="editor-field">
+        <label for="content">Content</label>
+        <textarea id="content" placeholder="Write your post…" required></textarea>
+      </div>
+      <div class="editor-actions">
+        <a href="index.html" class="btn-ghost">Cancel</a>
+        <button type="submit" class="btn-submit">Publish</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    Blog.requireAuth();
+    Blog.renderNav('feed');
+
+    document.getElementById('postForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.classList.remove('show');
+      try {
+        const post = await Blog.api('/api/posts', 'POST', {
+          title: document.getElementById('title').value.trim(),
+          content: document.getElementById('content').value.trim(),
+        });
+        location.href = `post.html?id=${post.id}`;
+      } catch (err) {
+        errorMsg.textContent = err.message;
+        errorMsg.classList.add('show');
+      }
+    });
+  </script>
+</body>
+</html>

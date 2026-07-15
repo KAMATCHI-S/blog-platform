@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit post · Inkwell</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar" id="navSlot"></div>
+  <div class="main">
+    <h1>Edit post</h1>
+    <p class="sub">Update your post below.</p>
+    <div class="error-msg" id="errorMsg"></div>
+    <form id="postForm">
+      <div class="editor-field">
+        <label for="title">Title</label>
+        <input id="title" required maxlength="200">
+      </div>
+      <div class="editor-field">
+        <label for="content">Content</label>
+        <textarea id="content" required></textarea>
+      </div>
+      <div class="editor-actions">
+        <a href="#" class="btn-ghost" id="cancelLink">Cancel</a>
+        <button type="submit" class="btn-submit">Save changes</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    Blog.requireAuth();
+    Blog.renderNav('feed');
+
+    const postId = new URLSearchParams(location.search).get('id');
+    document.getElementById('cancelLink').href = `post.html?id=${postId}`;
+
+    async function load() {
+      try {
+        const post = await Blog.api(`/api/posts/${postId}`);
+        const user = Blog.getUser();
+        if (!user || post.user_id !== user.id) { location.href = `post.html?id=${postId}`; return; }
+        document.getElementById('title').value = post.title;
+        document.getElementById('content').value = post.content;
+      } catch (err) {
+        document.getElementById('errorMsg').textContent = err.message;
+        document.getElementById('errorMsg').classList.add('show');
+      }
+    }
+
+    document.getElementById('postForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.classList.remove('show');
+      try {
+        await Blog.api(`/api/posts/${postId}`, 'PUT', {
+          title: document.getElementById('title').value.trim(),
+          content: document.getElementById('content').value.trim(),
+        });
+        location.href = `post.html?id=${postId}`;
+      } catch (err) {
+        errorMsg.textContent = err.message;
+        errorMsg.classList.add('show');
+      }
+    });
+
+    load();
+  </script>
+</body>
+</html>

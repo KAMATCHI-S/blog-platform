@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inkwell — Feed</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topbar" id="navSlot"></div>
+  <div class="main">
+    <h1>The feed</h1>
+    <p class="sub">Posts from everyone on Inkwell.</p>
+    <div class="toolbar">
+      <input id="searchInput" placeholder="Search posts…">
+    </div>
+    <div class="post-list" id="postList"></div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    Blog.renderNav('feed');
+    let posts = [];
+
+    function renderPosts(list) {
+      const container = document.getElementById('postList');
+      if (list.length === 0) {
+        container.innerHTML = `<div class="empty-state">No posts yet. ${Blog.getToken() ? '<a href="new-post.html" style="color:var(--primary)">Write the first one →</a>' : ''}</div>`;
+        return;
+      }
+      container.innerHTML = list.map(p => `
+        <div class="post-card">
+          <h2><a href="post.html?id=${p.id}">${Blog.escapeHtml(p.title)}</a></h2>
+          <p class="excerpt">${Blog.escapeHtml(p.content.slice(0, 200))}${p.content.length > 200 ? '…' : ''}</p>
+          <div class="post-meta">
+            <span class="author">@${Blog.escapeHtml(p.author)}</span>
+            <span class="dot-sep"></span>
+            <span>${Blog.timeAgo(p.created_at)}</span>
+            <span class="dot-sep"></span>
+            <span class="comment-count">💬 ${p.comment_count}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function load() {
+      try {
+        posts = await Blog.api('/api/posts');
+        renderPosts(posts);
+      } catch (err) {
+        document.getElementById('postList').innerHTML = `<div class="empty-state">${Blog.escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      renderPosts(posts.filter(p => p.title.toLowerCase().includes(q) || p.content.toLowerCase().includes(q)));
+    });
+
+    load();
+  </script>
+</body>
+</html>
